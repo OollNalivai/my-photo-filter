@@ -14,6 +14,7 @@ let result;
 
 const timesOfDay = () => {
     let whatTime = new Date().getHours();
+
     if (whatTime >= 18 && whatTime < 24) {
         result = 'evening';
     }
@@ -53,6 +54,7 @@ nextBtn.addEventListener('click', () => {
 const saveBtn = document.querySelector('.btn-save');
 
 saveBtn.addEventListener('click', () => {
+
     const link = document.createElement('a');
     link.href = imageSrc;
 
@@ -68,9 +70,8 @@ saveBtn.addEventListener('click', () => {
 const loadInput = document.querySelector('.btn-load--input');
 const fileReader = new FileReader();
 
-loadInput.addEventListener('change', () => {
-    let file = loadInput.files[0];
-    fileReader.readAsDataURL(file)
+loadInput.addEventListener('change', (event) => {
+    fileReader.readAsDataURL(event.target.files[0]);
     fileReader.onload = () => {
         image.setAttribute('src', `${fileReader.result}`)
     }
