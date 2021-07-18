@@ -30,7 +30,8 @@ const timesOfDay = () => {
 }
 
 let imageNumber = 1;
-const imageSrc = image.src;
+let imageSrc = image.src;
+
 const currentImageNumber = () => {
     if (imageNumber < 20) {
         imageNumber++;
@@ -50,9 +51,33 @@ nextBtn.addEventListener('click', () => {
 
 // save image
 const saveBtn = document.querySelector('.btn-save');
-saveBtn.addEventListener('click', (Event) => {
-    document.getElementById('save')
-        .setAttribute("href",`${image.src}`);
-    document.getElementById('save').click();
+
+saveBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.href = imageSrc;
+
+    const newFileName = `${image.src
+        .replace(/^.*[\\\/]/, '')
+        .replace('.', '_NEW.')}`;
+
+    link.setAttribute('download', newFileName);
+    link.click();
+});
+
+// load image
+const loadInput = document.querySelector('.btn-load--input');
+const fileReader = new FileReader();
+
+loadInput.addEventListener('change', () => {
+    let file = loadInput.files[0];
+    fileReader.readAsDataURL(file)
+    fileReader.onload = () => {
+        image.setAttribute('src', `${fileReader.result}`)
+    }
 })
 
+// reset filter image
+const resetBtn = document.querySelector('.btn-reset');
+resetBtn.addEventListener('click', (event) => {
+
+})
