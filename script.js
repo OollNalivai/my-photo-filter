@@ -1,4 +1,4 @@
-// fullscreen
+// fullscreen++
 const fullScreen = document.querySelector('.fullscreen');
 
 fullScreen.addEventListener('click', () => {
@@ -7,7 +7,7 @@ fullScreen.addEventListener('click', () => {
         : document.exitFullscreen()
 });
 
-// next image
+// next image++
 const nextBtn = document.querySelector('.btn-next');
 let image = document.querySelector('.image');
 let result;
@@ -66,19 +66,57 @@ saveBtn.addEventListener('click', () => {
     link.click();
 });
 
-// load image
+// load image++
 const loadInput = document.querySelector('.btn-load--input');
 const fileReader = new FileReader();
 
 loadInput.addEventListener('change', (event) => {
     fileReader.readAsDataURL(event.target.files[0]);
+
+    loadInput.value = '';
     fileReader.onload = () => {
         image.setAttribute('src', `${fileReader.result}`)
     }
 })
 
-// reset filter image
-const resetBtn = document.querySelector('.btn-reset');
-resetBtn.addEventListener('click', (event) => {
+// filters++
 
+const root = document.documentElement;
+const resultsOutputs = document.getElementsByName('result');
+const valueRoots =
+    [
+        [0, 'blur', '--blur', 'px', 0],
+        [1, 'invert', '--invert', '%', 0],
+        [2, 'sepia', '--sepia', '%', 0],
+        [3, 'saturate', '--saturate', '%', 100],
+        [4, 'hue', '--hue', 'deg', 0],
+    ];
+
+const addEventRange = ([indexRange, name, rootName, unit]) => {
+    document.getElementsByName(name)[0].addEventListener('input', (event) => {
+
+        resultsOutputs[indexRange].value = event.target.value;
+        root.style.setProperty(`${rootName}`,
+            `${resultsOutputs[indexRange].value}${unit}`);
+    })
+
+
+};
+
+valueRoots.forEach((el) => addEventRange(el));
+
+// reset filter image++
+
+const resetBtn = document.querySelector('.btn-reset');
+
+resetBtn.addEventListener('click', () => {
+    const resetEventRange = ([indexRange, name, rootName, unit, defaultValue]) => {
+
+        root.style.setProperty(`${rootName}`,
+            `${defaultValue}${unit}`);
+
+        resultsOutputs[indexRange].value = defaultValue;
+        document.getElementsByName(name)[0].value = defaultValue;
+    }
+    valueRoots.forEach((el) => resetEventRange(el));
 })
