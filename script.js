@@ -1,4 +1,5 @@
 // fullscreen++
+
 const fullScreen = document.querySelector('.fullscreen');
 
 fullScreen.addEventListener('click', () => {
@@ -8,6 +9,7 @@ fullScreen.addEventListener('click', () => {
 });
 
 // next image++
+
 const nextBtn = document.querySelector('.btn-next');
 let image = document.querySelector('.image');
 let result;
@@ -50,23 +52,64 @@ nextBtn.addEventListener('click', () => {
     }
 });
 
+
 // save image
+
 const saveBtn = document.querySelector('.btn-save');
+const canvas = document.querySelector('.canvasImage');
+const link = document.createElement('a');
+
+const valueFilters = {
+    blur: "0px",
+    invert: "70%",
+    sepia: "0%",
+    saturate: "100%",
+    hue: "275deg",
+}
 
 saveBtn.addEventListener('click', () => {
+    let filtersImage = '';
 
-    const link = document.createElement('a');
-    link.href = imageSrc;
+    for (const [key, value] of Object.entries(valueFilters)) {
+        let res = `${key}(${value})`;
+        function loh() {
+            filtersImage += ` ${res}`;
+        }
+        loh(key, value)
+    }
 
-    const newFileName = `${image.src
-        .replace(/^.*[\\\/]/, '')
-        .replace('.', '_NEW.')}`;
+    console.log(filtersImage);
+
+
+    let ctx = canvas.getContext('2d');
+    ctx.filter = filtersImage;
+
+    ctx.drawImage(image,0,0, canvas.width, canvas.height);
+
+    this.src = canvas.toDataURL('image/jpeg')
+        .replace("image/png", "image/octet-stream");
+
+    link.href = this.src;
+    const newFileName = image.src;
 
     link.setAttribute('download', newFileName);
     link.click();
+
+    // it will save locally
+
+    // const link = document.createElement('a');
+    // link.href = imageSrc;
+    //
+    // const newFileName = `${image.src
+    //     .replace(/^.*[\\\/]/, '')
+    //     .replace('.', '_NEW.')}`;
+    //
+    // link.setAttribute('download', newFileName);
+    // link.click();
 });
 
 // load image++
+
 const loadInput = document.querySelector('.btn-load--input');
 const fileReader = new FileReader();
 
@@ -96,11 +139,10 @@ const addEventRange = ([indexRange, name, rootName, unit]) => {
     document.getElementsByName(name)[0].addEventListener('input', (event) => {
 
         resultsOutputs[indexRange].value = event.target.value;
+
         root.style.setProperty(`${rootName}`,
             `${resultsOutputs[indexRange].value}${unit}`);
     })
-
-
 };
 
 valueRoots.forEach((el) => addEventRange(el));
