@@ -1,4 +1,4 @@
-// fullscreen++
+// fullscreen
 
 const fullScreen = document.querySelector('.fullscreen');
 
@@ -8,7 +8,8 @@ fullScreen.addEventListener('click', () => {
         : document.exitFullscreen()
 });
 
-// next image++
+
+// next image
 
 const nextBtn = document.querySelector('.btn-next');
 let image = document.querySelector('.image');
@@ -56,59 +57,42 @@ nextBtn.addEventListener('click', () => {
 // save image
 
 const saveBtn = document.querySelector('.btn-save');
+const filtersStore = {
+    saturate: '100%',
+};
 const canvas = document.querySelector('.canvasImage');
+const ctx = canvas.getContext('2d');
 const link = document.createElement('a');
 
-const valueFilters = {
-    blur: "0px",
-    invert: "70%",
-    sepia: "0%",
-    saturate: "100%",
-    hue: "275deg",
-}
 
 saveBtn.addEventListener('click', () => {
-    let filtersImage = '';
+    let filters = '';
+    const filterParams = Object.entries(filtersStore);
+    const newFileName = `${image.src
+        .replace(/^.*[\\\/]/, '')
+        .replace('.', '_NEW.')}`;
 
-    for (const [key, value] of Object.entries(valueFilters)) {
-        let res = `${key}(${value})`;
-        function loh() {
-            filtersImage += ` ${res}`;
+    filterParams.forEach(([key, value], index) => {
+        filters += `${key}(${value}) `;
+
+        if (index === filterParams.length - 1) {
+            filters = filters.trim();
         }
-        loh(key, value)
-    }
+    });
 
-    console.log(filtersImage);
-
-
-    let ctx = canvas.getContext('2d');
-    ctx.filter = filtersImage;
-
+    ctx.filter = filters;
     ctx.drawImage(image,0,0, canvas.width, canvas.height);
 
     this.src = canvas.toDataURL('image/jpeg')
         .replace("image/png", "image/octet-stream");
-
     link.href = this.src;
-    const newFileName = image.src;
 
     link.setAttribute('download', newFileName);
     link.click();
-
-    // it will save locally
-
-    // const link = document.createElement('a');
-    // link.href = imageSrc;
-    //
-    // const newFileName = `${image.src
-    //     .replace(/^.*[\\\/]/, '')
-    //     .replace('.', '_NEW.')}`;
-    //
-    // link.setAttribute('download', newFileName);
-    // link.click();
 });
 
-// load image++
+
+// load image
 
 const loadInput = document.querySelector('.btn-load--input');
 const fileReader = new FileReader();
@@ -122,10 +106,11 @@ loadInput.addEventListener('change', (event) => {
     }
 })
 
-// filters++
 
-const root = document.documentElement;
+// filters
+
 const resultsOutputs = document.getElementsByName('result');
+const root = document.documentElement;
 const valueRoots =
     [
         [0, 'blur', '--blur', 'px', 0],
@@ -136,18 +121,27 @@ const valueRoots =
     ];
 
 const addEventRange = ([indexRange, name, rootName, unit]) => {
-    document.getElementsByName(name)[0].addEventListener('input', (event) => {
+    const [element] = document.getElementsByName(name);
+
+    element.addEventListener('input', (event) => {
 
         resultsOutputs[indexRange].value = event.target.value;
 
         root.style.setProperty(`${rootName}`,
             `${resultsOutputs[indexRange].value}${unit}`);
-    })
+    });
+
+    element.addEventListener('change', (event) => {
+        const currentKey = name === 'hue' ? 'hue-rotate' : name;
+
+        filtersStore[currentKey] = `${event.target.value}${unit}`;
+    });
 };
 
 valueRoots.forEach((el) => addEventRange(el));
 
-// reset filter image++
+
+// reset filter image
 
 const resetBtn = document.querySelector('.btn-reset');
 
