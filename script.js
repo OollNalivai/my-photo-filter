@@ -12,44 +12,39 @@ fullScreen.addEventListener('click', () => {
 // next image
 
 const nextBtn = document.querySelector('.btn-next');
-let image = document.querySelector('.image');
+const image = document.querySelector('.image');
 let result;
 
 const timesOfDay = () => {
-    let whatTime = new Date().getHours();
+    const whatTime = new Date().getHours();
 
     if (whatTime >= 18 && whatTime < 24) {
-        result = 'evening';
+        return result = 'evening';
     }
     if (whatTime >= 12 && whatTime < 18) {
-        result = 'day';
+        return result = 'day';
     }
     if (whatTime >= 6 && whatTime < 12) {
-        result = 'morning';
+        return result = 'morning';
     }
     if (whatTime >= 0 && whatTime < 6) {
-        result = 'night';
+        return result = 'night';
     }
-    return result;
 }
 
 let imageNumber = 1;
-let imageSrc = image.src;
+const imageSrc = image.src;
 
-const currentImageNumber = () => {
-    if (imageNumber < 20) {
-        imageNumber++;
-        return ('0' + imageNumber).slice(-2);
-    } else {
-        imageNumber = 1;
-        return ('0' + imageNumber).slice(-2);
-    }
-}
+const currentImageNumber = () => imageNumber <= 20 ?
+    ('0' + imageNumber++).slice(-2) :
+    ('0' + (imageNumber = 1)).slice(-2);
 
 nextBtn.addEventListener('click', () => {
     timesOfDay();
     if (imageSrc !== 'assets/img/img.jpg') {
-        return image.src = `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${result}/${currentImageNumber()}.jpg`;
+        image.setAttribute('crossorigin', 'anonymous');
+        image.setAttribute('src',
+            `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${result}/${currentImageNumber()}.jpg`);
     }
 });
 
@@ -64,11 +59,10 @@ const canvas = document.querySelector('.canvasImage');
 const ctx = canvas.getContext('2d');
 const link = document.createElement('a');
 
-
 saveBtn.addEventListener('click', () => {
     let filters = '';
     const filterParams = Object.entries(filtersStore);
-    const newFileName = `${image.src
+    const newFileName = `${imageSrc
         .replace(/^.*[\\\/]/, '')
         .replace('.', '_NEW.')}`;
 
@@ -81,10 +75,11 @@ saveBtn.addEventListener('click', () => {
     });
 
     ctx.filter = filters;
-    ctx.drawImage(image,0,0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     this.src = canvas.toDataURL('image/jpeg')
         .replace("image/png", "image/octet-stream");
+
     link.href = this.src;
 
     link.setAttribute('download', newFileName);
