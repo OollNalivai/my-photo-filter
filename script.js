@@ -1,5 +1,33 @@
-// fullscreen
+// global variables
+const image = document.querySelector('.image');
+const filtersState = {
+    saturate: '100%',
+};
+const defaultFiltersState = Object.freeze({...filtersState});
+const resultsOutputs = document.getElementsByName('result');
+const root = document.documentElement;
+const rootValues =
+    [
+        // [name, rootName, unit, defaultValue]
+        ['blur', '--blur', 'px', 0],
+        ['invert', '--invert', '%', 0],
+        ['sepia', '--sepia', '%', 0],
+        ['saturate', '--saturate', '%', 100],
+        ['hue', '--hue', 'deg', 0],
+    ];
+const getCurrentImageSrc = () => image.getAttribute('src');
+let loadImageName;
+const removeAddClassBtnActive = () => document.querySelectorAll('.btn')
+    .forEach((element) => {
+        element.classList.forEach(el => {
+            if (el === 'btn-active') {
+                element.classList.remove('btn-active')
+            }
+            event.target.classList.add('btn-active')
+        })
+    });
 
+// fullscreen
 const fullScreen = document.querySelector('.fullscreen');
 
 fullScreen.addEventListener('click', () => {
@@ -7,64 +35,50 @@ fullScreen.addEventListener('click', () => {
         ? document.documentElement.requestFullscreen()
         : document.exitFullscreen()
 });
-
-
 // next image
-
-const nextBtn = document.querySelector('.btn-next');
-const image = document.querySelector('.image');
-let result;
-
+let currentImageNumber = 0;
 const timesOfDay = () => {
-    const whatTime = new Date().getHours();
+    const currentHours = new Date().getHours();
+    const timeMap = [
+        [0, 6, 'night'],
+        [6, 12, 'morning'],
+        [12, 18, 'day'],
+        [18, 24, 'evening'],
+    ];
 
-    if (whatTime >= 18 && whatTime < 24) {
-        return result = 'evening';
+    for (const [start, end, result] of timeMap) {
+        if (currentHours >= start && currentHours < end) {
+            return result;
+        }
     }
-    if (whatTime >= 12 && whatTime < 18) {
-        return result = 'day';
-    }
-    if (whatTime >= 6 && whatTime < 12) {
-        return result = 'morning';
-    }
-    if (whatTime >= 0 && whatTime < 6) {
-        return result = 'night';
-    }
-}
-
-let imageNumber = 1;
-const imageSrc = image.src;
-
-const currentImageNumber = () => imageNumber <= 20 ?
-    ('0' + imageNumber++).slice(-2) :
-    ('0' + (imageNumber = 1)).slice(-2);
-
-nextBtn.addEventListener('click', () => {
-    timesOfDay();
-    if (imageSrc !== 'assets/img/img.jpg') {
-        image.setAttribute('crossorigin', 'anonymous');
-        image.setAttribute('src',
-            `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${result}/${currentImageNumber()}.jpg`);
-    }
-});
-
-
-// save image
-
-const saveBtn = document.querySelector('.btn-save');
-const filtersStore = {
-    saturate: '100%',
 };
+
+const getCurrentImageNumber = () => {
+    currentImageNumber = currentImageNumber !== 20 ? currentImageNumber + 1 : 1;
+
+    return `0${currentImageNumber}`.slice(-2);
+};
+
+document.querySelector('.btn-next')
+    .addEventListener('click', () => {
+
+        removeAddClassBtnActive();
+
+        image.setAttribute('src',
+            `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${timesOfDay()}/${getCurrentImageNumber()}.jpg`);
+
+        if (getCurrentImageSrc() !== 'assets/img/img.jpg') {
+            image.setAttribute('crossorigin', 'anonymous');
+        }
+    });
+// save image
 const canvas = document.querySelector('.canvasImage');
 const ctx = canvas.getContext('2d');
 const link = document.createElement('a');
 
-saveBtn.addEventListener('click', () => {
+const canvasFilter = () => {
     let filters = '';
-    const filterParams = Object.entries(filtersStore);
-    const newFileName = `${imageSrc
-        .replace(/^.*[\\\/]/, '')
-        .replace('.', '_NEW.')}`;
+    const filterParams = Object.entries(filtersState);
 
     filterParams.forEach(([key, value], index) => {
         filters += `${key}(${value}) `;
@@ -73,81 +87,92 @@ saveBtn.addEventListener('click', () => {
             filters = filters.trim();
         }
     });
+    return filters;
+}
 
-    ctx.filter = filters;
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+const isBase64 = (str) => /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/.test(str.replace(/.*,/, ''));
 
-    this.src = canvas.toDataURL('image/jpeg')
-        .replace("image/png", "image/octet-stream");
+const getImageName = () => {
+    const imageSrc = getCurrentImageSrc();
 
-    link.href = this.src;
+    const preResult = isBase64(imageSrc)
+        ? loadImageName
+        : `${imageSrc.replace(/^.*[\\\/]/, '')}`;
 
-    link.setAttribute('download', newFileName);
-    link.click();
-});
+    return preResult.replace('.', '_NEW.');
+}
 
+document.querySelector('.btn-save')
+    .addEventListener('click', () => {
 
+        removeAddClassBtnActive();
+
+        ctx.filter = canvasFilter();
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        link.href = canvas
+            .toDataURL('image/jpeg')
+            .replace("image/png", "image/octet-stream");
+
+        link.setAttribute('download', getImageName());
+        link.click();
+    });
 // load image
-
 const loadInput = document.querySelector('.btn-load--input');
 const fileReader = new FileReader();
 
+fileReader.addEventListener('load', () => {
+    image.setAttribute('src', `${fileReader.result}`);
+});
+
 loadInput.addEventListener('change', (event) => {
-    fileReader.readAsDataURL(event.target.files[0]);
+    // fileReader.readAsDataURL(event.target.files[0]);
+    const target = event.target;
+    const [file] = target.files;
 
-    loadInput.value = '';
-    fileReader.onload = () => {
-        image.setAttribute('src', `${fileReader.result}`)
-    }
+    loadImageName = file.name;
+    fileReader.readAsDataURL(file);
+
+    target.value = '';
 })
-
-
 // filters
-
-const resultsOutputs = document.getElementsByName('result');
-const root = document.documentElement;
-const valueRoots =
-    [
-        [0, 'blur', '--blur', 'px', 0],
-        [1, 'invert', '--invert', '%', 0],
-        [2, 'sepia', '--sepia', '%', 0],
-        [3, 'saturate', '--saturate', '%', 100],
-        [4, 'hue', '--hue', 'deg', 0],
-    ];
-
-const addEventRange = ([indexRange, name, rootName, unit]) => {
+rootValues.forEach(([name, rootName, unit], index) => {
     const [element] = document.getElementsByName(name);
 
     element.addEventListener('input', (event) => {
-
-        resultsOutputs[indexRange].value = event.target.value;
+        resultsOutputs[index].value = event.target.value;
 
         root.style.setProperty(`${rootName}`,
-            `${resultsOutputs[indexRange].value}${unit}`);
+            `${resultsOutputs[index].value}${unit}`);
     });
 
     element.addEventListener('change', (event) => {
         const currentKey = name === 'hue' ? 'hue-rotate' : name;
 
-        filtersStore[currentKey] = `${event.target.value}${unit}`;
+        filtersState[currentKey] = `${event.target.value}${unit}`;
     });
-};
-
-valueRoots.forEach((el) => addEventRange(el));
-
-
+});
 // reset filter image
+document.querySelector('.btn-reset').addEventListener('click', () => {
 
-const resetBtn = document.querySelector('.btn-reset');
+    removeAddClassBtnActive();
 
-resetBtn.addEventListener('click', () => {
-    const resetEventRange = ([indexRange, name, rootName, unit, defaultValue]) => {
+    rootValues.forEach(([name, rootName,
+                            unit, defaultValue], index) => {
+        const [element] = document.getElementsByName(name);
 
         root.style.setProperty(`${rootName}`,
             `${defaultValue}${unit}`);
 
-        resultsOutputs[indexRange].value = defaultValue;
-        document.getElementsByName(name)[0].value = defaultValue;
-    }
-    valueRoots.forEach((el) => resetEventRange(el));
+        resultsOutputs[index].value = defaultValue;
+        element.value = defaultValue;
+    });
+    // reset filterState
+    Object.keys(filtersState).forEach(key => {
+        if (!defaultFiltersState[key]) {
+            delete filtersState[key]
+        } else {
+            filtersState[key] = defaultFiltersState[key];
+        }
+    });
 })
