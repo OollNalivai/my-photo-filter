@@ -1,5 +1,6 @@
 // global variables
 const image = document.querySelector('.image');
+const canvas = document.querySelector('.canvasImage');
 const filtersState = {
     saturate: '100%',
 };
@@ -72,7 +73,6 @@ document.querySelector('.btn-next')
         }
     });
 // save image
-const canvas = document.querySelector('.canvasImage');
 const ctx = canvas.getContext('2d');
 const link = document.createElement('a');
 
@@ -105,8 +105,10 @@ const getImageName = () => {
 document.querySelector('.btn-save')
     .addEventListener('click', () => {
 
-        removeAddClassBtnActive();
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
 
+        removeAddClassBtnActive();
         ctx.filter = canvasFilter();
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
@@ -126,15 +128,15 @@ fileReader.addEventListener('load', () => {
 });
 
 loadInput.addEventListener('change', (event) => {
-    // fileReader.readAsDataURL(event.target.files[0]);
+
     const target = event.target;
     const [file] = target.files;
 
     loadImageName = file.name;
     fileReader.readAsDataURL(file);
-
     target.value = '';
 })
+
 // filters
 rootValues.forEach(([name, rootName, unit], index) => {
     const [element] = document.getElementsByName(name);
