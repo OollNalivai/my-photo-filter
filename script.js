@@ -1,12 +1,20 @@
+'use strict';
 // global variables
+let btnContainer = document.querySelector(".btn-container");
+let buttons = [...btnContainer.querySelectorAll(".btn")];
+
 const image = document.querySelector('.image');
 const canvas = document.querySelector('.canvasImage');
+
 const filtersState = {
     saturate: '100%',
 };
 const defaultFiltersState = Object.freeze({...filtersState});
+
 const resultsOutputs = document.getElementsByName('result');
 const root = document.documentElement;
+let loadImageName;
+
 const rootValues =
     [
         // [name, rootName, unit, defaultValue]
@@ -16,18 +24,17 @@ const rootValues =
         ['saturate', '--saturate', '%', 100],
         ['hue', '--hue', 'deg', 0],
     ];
-const getCurrentImageSrc = () => image.getAttribute('src');
-let loadImageName;
-const removeAddClassBtnActive = () => document.querySelectorAll('.btn')
-    .forEach((element) => {
-        element.classList.forEach(el => {
-            if (el === 'btn-active') {
-                element.classList.remove('btn-active')
-            }
-            event.target.classList.add('btn-active')
-        })
-    });
 
+const getCurrentImageSrc = () => image.getAttribute('src');
+// btn active style
+buttons.forEach(el => {
+    el.addEventListener("click", () => {
+        const [current] = document.getElementsByClassName("btn-active");
+
+        current.classList.toggle('btn-active', false)
+        el.className += " btn-active";
+    });
+});
 // fullscreen
 const fullScreen = document.querySelector('.fullscreen');
 
@@ -39,6 +46,7 @@ fullScreen.addEventListener('click', () => {
 // next image
 let currentImageNumber = 0;
 const timesOfDay = () => {
+
     const currentHours = new Date().getHours();
     const timeMap = [
         [0, 6, 'night'],
@@ -54,16 +62,15 @@ const timesOfDay = () => {
     }
 };
 
+const totalImagesInPeriod = 20;
 const getCurrentImageNumber = () => {
-    currentImageNumber = currentImageNumber !== 20 ? currentImageNumber + 1 : 1;
+    currentImageNumber = currentImageNumber !== totalImagesInPeriod ? currentImageNumber + 1 : 1;
 
     return `0${currentImageNumber}`.slice(-2);
 };
 
 document.querySelector('.btn-next')
     .addEventListener('click', () => {
-
-        removeAddClassBtnActive();
 
         image.setAttribute('src',
             `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${timesOfDay()}/${getCurrentImageNumber()}.jpg`);
@@ -90,7 +97,8 @@ const canvasFilter = () => {
     return filters;
 }
 
-const isBase64 = (str) => /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/.test(str.replace(/.*,/, ''));
+const isBase64 = (str) => /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/
+    .test(str.replace(/.*,/, ''));
 
 const getImageName = () => {
     const imageSrc = getCurrentImageSrc();
@@ -108,7 +116,6 @@ document.querySelector('.btn-save')
         canvas.width = image.naturalWidth;
         canvas.height = image.naturalHeight;
 
-        removeAddClassBtnActive();
         ctx.filter = canvasFilter();
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
@@ -156,8 +163,6 @@ rootValues.forEach(([name, rootName, unit], index) => {
 });
 // reset filter image
 document.querySelector('.btn-reset').addEventListener('click', () => {
-
-    removeAddClassBtnActive();
 
     rootValues.forEach(([name, rootName,
                             unit, defaultValue], index) => {
