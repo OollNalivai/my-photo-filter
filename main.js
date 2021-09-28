@@ -44,7 +44,6 @@ fullScreen.addEventListener('click', () => {
         : document.exitFullscreen()
 });
 // next image
-let currentImageNumber = 0;
 const timesOfDay = () => {
 
     const currentHours = new Date().getHours();
@@ -62,6 +61,7 @@ const timesOfDay = () => {
     }
 };
 
+let currentImageNumber = 0;
 const totalImagesInPeriod = 20;
 const getCurrentImageNumber = () => {
     currentImageNumber = currentImageNumber !== totalImagesInPeriod ? currentImageNumber + 1 : 1;
