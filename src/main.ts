@@ -2,33 +2,20 @@ import './main.css';
 import {IFilterState} from './models';
 
 class PhotoFilter {
-    readonly #regExp: RegExp = new RegExp(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/);
-    #currentImageNumber: number = 0;
     readonly #totalImagesInPeriod: Readonly<number> = 20;
-    #loadImageName: any;
+    readonly #fileReader: FileReader;
+    readonly #state: State;
 
-    #state: State;
-    #stateValues =
-        ([
-            ['blur', '--blur', 'px', 0],
-            ['invert', '--invert', '%', 0],
-            ['sepia', '--sepia', '%', 0],
-            ['saturate', '--saturate', '%', 100],
-            ['hue', '--hue', 'deg', 0],
-        ] as Array<[string, string, string, number]>);
-
-    readonly #fileReader: FileReader = new FileReader();
+    #currentImageNumber: number = 0;
+    #loadImageName: string | undefined;
 
     constructor() {
         this.#state = new State();
+        this.#fileReader = new FileReader();
     }
 
-    get image(): HTMLImageElement | null {
+    static get #imageElement(): HTMLImageElement | null {
         return document.querySelector('.image');
-    }
-
-    get currentImageSrc(): string | null {
-        return this.image!.getAttribute('src');
     }
 
     static get #resultsOutputs(): HTMLOutputElement[] {
@@ -36,73 +23,7 @@ class PhotoFilter {
             .getElementsByName('result')) as HTMLOutputElement[];
     }
 
-    static get #root(): HTMLElement {
-        return document.documentElement as HTMLElement;
-    }
-
-    init(): void {
-        // fullscreen
-        this.#fullScreenListener();
-        // btn active style
-        this.#btnActiveStyle();
-        // next image
-        this.#btnNextImage();
-        // save image
-        this.#getSaveImage();
-        // load image
-        this.#loadImage();
-        // filters
-        this.#changeFiltersListener();
-        // reset filter image
-        this.#resetFilterImage();
-    }
-
-    // fullscreen
-    #fullScreenListener(): void {
-        const fullScreenBtn: Element | null = document.querySelector('.fullscreen');
-
-        if (fullScreenBtn) {
-            fullScreenBtn.addEventListener('click', () => {
-                !document.fullscreenElement
-                    ? document.documentElement.requestFullscreen()
-                    : document.exitFullscreen();
-            });
-        }
-    }
-
-    // btn active style
-    #btnActiveStyle(): void {
-        const buttons: Element | null = document.querySelector('.btn-container');
-
-        if (buttons) {
-            Array.from(buttons.querySelectorAll('.btn'))
-                .forEach((btnElement: Element, index: number, currentArr: Element[]) => {
-                    btnElement.addEventListener('click', (event: Event) => {
-
-                        currentArr.forEach((element: Element) => element.classList.toggle('btn-active', false));
-
-                        const target = event.target as HTMLButtonElement;
-                        target.classList.toggle('btn-active', true);
-                    });
-                });
-        }
-    }
-
-    // next image
-    #btnNextImage(): void {
-        document.querySelector('.btn-next')
-            ?.addEventListener('click', () => {
-
-                this.image?.setAttribute('src',
-                    `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#timesOfDay()}/${this.#getCurrentImageNumber()}.jpg`);
-
-                if (this.currentImageSrc !== 'assets/img/img.jpg') {
-                    this.image?.setAttribute('crossorigin', 'anonymous');
-                }
-            });
-    }
-
-    static #timesOfDay(): string | undefined {
+    static get #getTimeOfDay(): string | undefined {
         const currentHours: number = new Date().getHours();
         const timeMap: [number, number, string][] = [
             [0, 6, 'night'],
@@ -119,30 +40,109 @@ class PhotoFilter {
             }
         }
 
-        return preResult as string;
+        return preResult;
     };
+
+    static get #root(): HTMLElement {
+        return document.documentElement as HTMLElement;
+    }
+
+    get currentImageSrc(): string | null {
+        return PhotoFilter.#imageElement!.getAttribute('src');
+    }
+
+    init(): void {
+        // fullscreen
+        this.#fullScreenListener();
+        // btn active style
+        this.#btnActiveStyleListener();
+        // next image
+        this.#btnNextImageListener();
+        // save image
+        this.#getSaveImageListener();
+        // load image
+        this.#loadImageListener();
+        // filters
+        this.#changeFiltersListener();
+        // reset filter image
+        this.#resetFilterImageListener();
+    }
+
+    // fullscreen
+    #fullScreenListener(): void {
+        const fullScreenBtn: Element | null = document.querySelector('.fullscreen');
+
+        if (fullScreenBtn) {
+            fullScreenBtn.addEventListener('click', () => {
+                !document.fullscreenElement
+                    ? document.documentElement.requestFullscreen()
+                    : document.exitFullscreen();
+            });
+        }
+    }
+
+    // btn active style
+    #btnActiveStyleListener(): void {
+        const buttons: Element | null = document.querySelector('.btn-container');
+
+        if (buttons) {
+            Array.from(buttons.querySelectorAll('.btn'))
+                .forEach((btnElement: Element, index: number, currentArr: Element[]) => {
+
+                    btnElement.addEventListener('click', (event: Event) => {
+
+                        const target = event.target as HTMLButtonElement;
+
+                        currentArr.forEach((element: Element) => element.classList.toggle('btn-active', false));
+                        target.classList.toggle('btn-active', true);
+                    });
+                });
+        }
+    }
+
+    // next image
+    #btnNextImageListener(): void {
+        const buttonNext: Element | null = document.querySelector('.btn-next');
+
+        if (buttonNext) {
+            buttonNext.addEventListener('click', () => {
+
+                if (PhotoFilter.#imageElement) {
+                    PhotoFilter.#imageElement.setAttribute('src',
+                        `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#getTimeOfDay}/${this.#getCurrentImageNumber()}.jpg`);
+
+                    if (this.currentImageSrc !== 'assets/img/img.jpg') {
+                        PhotoFilter.#imageElement.setAttribute('crossorigin', 'anonymous');
+                    }
+                }
+            });
+        }
+    }
 
     #getCurrentImageNumber(): string {
         this.#currentImageNumber =
             this.#currentImageNumber !== this.#totalImagesInPeriod ? this.#currentImageNumber + 1 : 1;
 
-        return `0${this.#currentImageNumber}`.slice(-2) as string;
+        return `0${this.#currentImageNumber}`.slice(-2);
     }
 
     // save image
-    #getSaveImage(): void {
-        const canvas = <HTMLCanvasElement>document.querySelector('.canvasImage');
-        const ctx: CanvasRenderingContext2D | null = canvas.getContext('2d');
-        const link:  HTMLAnchorElement | undefined = document.createElement('a');
+    #getSaveImageListener(): void {
+        const canvas = document.querySelector('.canvasImage') as HTMLCanvasElement;
+        const ctx = canvas.getContext('2d');
+        const link = document.createElement('a');
+        const buttonSave: Element | null = document.querySelector('.btn-save');
 
-        document.querySelector('.btn-save')
-            ?.addEventListener('click', () => {
+        if (buttonSave) {
+            buttonSave.addEventListener('click', () => {
 
-                canvas.width = this.image!.naturalWidth;
-                canvas.height = this.image!.naturalHeight;
+                canvas.width = PhotoFilter.#imageElement!.naturalWidth;
+                canvas.height = PhotoFilter.#imageElement!.naturalHeight;
 
-                ctx ? ctx.filter = this.#state.forCanvasFilter : null;
-                ctx ? ctx.drawImage(this.image!, 0, 0, canvas.width, canvas.height): null;
+                if (ctx) {
+                    ctx.filter = this.#state.forCanvasFilter;
+                    ctx.drawImage(PhotoFilter.#imageElement!, 0, 0, canvas.width, canvas.height)
+                }
 
                 link.href = canvas
                     .toDataURL('image/jpeg')
@@ -151,19 +151,21 @@ class PhotoFilter {
                 link.setAttribute('download', this.#getImageName());
                 link.click();
             });
+        }
     }
 
     #getImageName(): string {
-        const preResult: string = this.#regExp.test(this.currentImageSrc!.replace(/.*,/, ''))
+        const regExp: RegExp = new RegExp(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/);
+        const preResult: string | undefined = regExp.test(this.currentImageSrc!.replace(/.*,/, ''))
             ? this.#loadImageName
             : `${this.currentImageSrc?.replace(/^.*[\\\/]/, '')}`;
 
-        return preResult.replace('.', '_NEW.') as string;
+        return preResult?.replace('.', '_NEW.') as string;
     }
 
     // filters
     #changeFiltersListener(): void {
-        this.#stateValues.forEach(([name, rootName, unit, _]: [string, string, string, number], index: number) => {
+        this.#state.stateValues.forEach(([name, rootName, unit, _]: [string, string, string, number], index: number) => {
             const [element]: Array<HTMLElement> = Array.from(document.getElementsByName(name));
 
             element.addEventListener('input', (event: Event) => {
@@ -185,11 +187,11 @@ class PhotoFilter {
     }
 
     // load image
-    #loadImage(): void {
+    #loadImageListener(): void {
         const loadInput: Element | null = document.querySelector('.btn-load--input');
 
         this.#fileReader.addEventListener('load', () => {
-            this.image?.setAttribute('src', `${this.#fileReader.result}`);
+            PhotoFilter.#imageElement?.setAttribute('src', `${this.#fileReader.result}`);
         });
 
         if (loadInput) {
@@ -203,16 +205,17 @@ class PhotoFilter {
                 target.value = '';
             });
         }
-
     }
 
     // reset filter image
-    #resetFilterImage(): void {
-        document.querySelector('.btn-reset')
-            ?.addEventListener('click', () => {
+    #resetFilterImageListener(): void {
+        const buttonReset = document.querySelector('.btn-reset');
 
-                this.#stateValues.forEach(([name, rootName,
-                                               unit, defaultValue], index) => {
+        if (buttonReset) {
+            buttonReset.addEventListener('click', () => {
+
+                this.#state.stateValues.forEach(([name, rootName,
+                                                     unit, defaultValue], index) => {
                     const [element]: any = document.getElementsByName(name);
 
                     PhotoFilter.#root.style.setProperty(`${rootName}`,
@@ -224,6 +227,7 @@ class PhotoFilter {
 
                 this.#state.resetFilterState();
             });
+        }
     }
 }
 
@@ -259,6 +263,16 @@ class State {
         });
 
         return filters as string;
+    }
+
+    get stateValues() {
+        return ([
+            ['blur', '--blur', 'px', 0],
+            ['invert', '--invert', '%', 0],
+            ['sepia', '--sepia', '%', 0],
+            ['saturate', '--saturate', '%', 100],
+            ['hue', '--hue', 'deg', 0],
+        ] as Array<[string, string, string, number]>);
     }
 
     updateState(key: keyof IFilterState, value: string): void {
