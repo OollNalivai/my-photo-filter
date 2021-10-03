@@ -23,26 +23,6 @@ class PhotoFilter {
             .getElementsByName('result')) as HTMLOutputElement[];
     }
 
-    static get #getTimeOfDay(): string | undefined {
-        const currentHours: number = new Date().getHours();
-        const timeMap: [number, number, string][] = [
-            [0, 6, 'night'],
-            [6, 12, 'morning'],
-            [12, 18, 'day'],
-            [18, 24, 'evening'],
-        ];
-
-        let preResult;
-
-        for (const [start, end, result] of timeMap) {
-            if (currentHours >= start && currentHours < end) {
-                preResult = result;
-            }
-        }
-
-        return preResult;
-    };
-
     static get #root(): HTMLElement {
         return document.documentElement as HTMLElement;
     }
@@ -67,6 +47,27 @@ class PhotoFilter {
         // reset filter image
         this.#resetFilterImageListener();
     }
+
+    //get day of the week
+    static #getTimeOfDay(): string | undefined {
+        const currentHours: number = new Date().getHours();
+        const timeMap: [number, number, string][] = [
+            [0, 6, 'night'],
+            [6, 12, 'morning'],
+            [12, 18, 'day'],
+            [18, 24, 'evening'],
+        ];
+
+        let preResult;
+
+        for (const [start, end, result] of timeMap) {
+            if (currentHours >= start && currentHours < end) {
+                preResult = result;
+            }
+        }
+
+        return preResult;
+    };
 
     // fullscreen
     #fullScreenListener(): void {
@@ -139,7 +140,7 @@ class PhotoFilter {
                 canvas.height = PhotoFilter.#imageElement!.naturalHeight;
 
                 if (ctx) {
-                    ctx.filter = this.#state.forCanvasFilter;
+                    ctx.filter = this.#state.forCanvasFilter();
                     ctx.drawImage(PhotoFilter.#imageElement!, 0, 0, canvas.width, canvas.height)
                 }
 
@@ -147,13 +148,13 @@ class PhotoFilter {
                     .toDataURL('image/jpeg')
                     .replace('image/png', 'image/octet-stream');
 
-                link.setAttribute('download', this.#saveImageName());
+                link.setAttribute('download', this.#getImageName());
                 link.click();
             });
         }
     }
 
-    #saveImageName(): string {
+    #getImageName(): string {
         const regExp: RegExp = new RegExp(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/);
         const preResult: string | undefined = regExp.test(this.currentImageSrc!.replace(/.*,/, ''))
             ? this.#loadImageName
@@ -249,7 +250,17 @@ class State {
         return this.#state || {} as Partial<IFilterState>;
     }
 
-    get forCanvasFilter(): string {
+    get stateValues(): Array<[string, string, string, number]> {
+        return ([
+            ['blur', '--blur', 'px', 0],
+            ['invert', '--invert', '%', 0],
+            ['sepia', '--sepia', '%', 0],
+            ['saturate', '--saturate', '%', 100],
+            ['hue', '--hue', 'deg', 0],
+        ]);
+    }
+
+    forCanvasFilter(): string {
         const filterParams: [string, string][] = Object.entries(this.#state);
         let filters: string = '';
 
@@ -262,16 +273,6 @@ class State {
         });
 
         return filters;
-    }
-// ПОРАБОТАТЬ НАД ТИПОМ
-    get stateValues(): Array<[string, string, string, number]> {
-        return ([
-            ['blur', '--blur', 'px', 0],
-            ['invert', '--invert', '%', 0],
-            ['sepia', '--sepia', '%', 0],
-            ['saturate', '--saturate', '%', 100],
-            ['hue', '--hue', 'deg', 0],
-        ]);
     }
 
     updateState(key: keyof IFilterState, value: string): void {
