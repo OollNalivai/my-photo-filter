@@ -6,7 +6,7 @@ class PhotoFilter {
     readonly #fileReader: FileReader;
     readonly #state: State;
 
-    #currentImageNumber: number = 0;
+    #defaultCurrentImageNumber: number = 0;
     #loadImageName: string | undefined;
 
     constructor() {
@@ -59,7 +59,7 @@ class PhotoFilter {
         // next image
         this.#btnNextImageListener();
         // save image
-        this.#getSaveImageListener();
+        this.#saveImageListener();
         // load image
         this.#loadImageListener();
         // filters
@@ -88,11 +88,9 @@ class PhotoFilter {
         if (buttons) {
             Array.from(buttons.querySelectorAll('.btn'))
                 .forEach((btnElement: Element, index: number, currentArr: Element[]) => {
-
                     btnElement.addEventListener('click', (event: Event) => {
 
                         const target = event.target as HTMLButtonElement;
-
                         currentArr.forEach((element: Element) => element.classList.toggle('btn-active', false));
                         target.classList.toggle('btn-active', true);
                     });
@@ -109,7 +107,7 @@ class PhotoFilter {
 
                 if (PhotoFilter.#imageElement) {
                     PhotoFilter.#imageElement.setAttribute('src',
-                        `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#getTimeOfDay}/${this.#getCurrentImageNumber()}.jpg`);
+                        `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#getTimeOfDay}/${this.#currentImageNumber()}.jpg`);
 
                     if (this.currentImageSrc !== 'assets/img/img.jpg') {
                         PhotoFilter.#imageElement.setAttribute('crossorigin', 'anonymous');
@@ -119,19 +117,20 @@ class PhotoFilter {
         }
     }
 
-    #getCurrentImageNumber(): string {
-        this.#currentImageNumber =
-            this.#currentImageNumber !== this.#totalImagesInPeriod ? this.#currentImageNumber + 1 : 1;
+    #currentImageNumber(): string {
+        this.#defaultCurrentImageNumber =
+            this.#defaultCurrentImageNumber !== this.#totalImagesInPeriod ? this.#defaultCurrentImageNumber + 1 : 1;
 
-        return `0${this.#currentImageNumber}`.slice(-2);
+        return `0${this.#defaultCurrentImageNumber}`.slice(-2);
     }
 
     // save image
-    #getSaveImageListener(): void {
+    #saveImageListener(): void {
         const canvas = document.querySelector('.canvasImage') as HTMLCanvasElement;
         const ctx = canvas.getContext('2d');
-        const link = document.createElement('a');
         const buttonSave: Element | null = document.querySelector('.btn-save');
+
+        const link = document.createElement('a');
 
         if (buttonSave) {
             buttonSave.addEventListener('click', () => {
@@ -148,13 +147,13 @@ class PhotoFilter {
                     .toDataURL('image/jpeg')
                     .replace('image/png', 'image/octet-stream');
 
-                link.setAttribute('download', this.#getImageName());
+                link.setAttribute('download', this.#saveImageName());
                 link.click();
             });
         }
     }
 
-    #getImageName(): string {
+    #saveImageName(): string {
         const regExp: RegExp = new RegExp(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/);
         const preResult: string | undefined = regExp.test(this.currentImageSrc!.replace(/.*,/, ''))
             ? this.#loadImageName
@@ -166,7 +165,7 @@ class PhotoFilter {
     // filters
     #changeFiltersListener(): void {
         this.#state.stateValues.forEach(([name, rootName, unit, _]: [string, string, string, number], index: number) => {
-            const [element]: Array<HTMLElement> = Array.from(document.getElementsByName(name));
+            const [element] = Array.from(document.getElementsByName(name)) as Array<HTMLElement>;
 
             element.addEventListener('input', (event: Event) => {
                 const target = event.target as HTMLInputElement;
@@ -216,13 +215,13 @@ class PhotoFilter {
 
                 this.#state.stateValues.forEach(([name, rootName,
                                                      unit, defaultValue], index) => {
-                    const [element]: any = document.getElementsByName(name);
+                    const [element] = Array.from(document.getElementsByName(name)) as Array<HTMLInputElement>;
 
                     PhotoFilter.#root.style.setProperty(`${rootName}`,
                         `${defaultValue}${unit}`);
 
                     PhotoFilter.#resultsOutputs[index].value = `${defaultValue}`;
-                    element.value = defaultValue;
+                    element.value = `${defaultValue}`;
                 });
 
                 this.#state.resetFilterState();
@@ -262,17 +261,17 @@ class State {
             }
         });
 
-        return filters as string;
+        return filters;
     }
-
-    get stateValues() {
+// ПОРАБОТАТЬ НАД ТИПОМ
+    get stateValues(): Array<[string, string, string, number]> {
         return ([
             ['blur', '--blur', 'px', 0],
             ['invert', '--invert', '%', 0],
             ['sepia', '--sepia', '%', 0],
             ['saturate', '--saturate', '%', 100],
             ['hue', '--hue', 'deg', 0],
-        ] as Array<[string, string, string, number]>);
+        ]);
     }
 
     updateState(key: keyof IFilterState, value: string): void {
