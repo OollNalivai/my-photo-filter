@@ -108,7 +108,7 @@ class PhotoFilter {
 
                 if (PhotoFilter.#imageElement) {
                     PhotoFilter.#imageElement.setAttribute('src',
-                        `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#getTimeOfDay}/${this.#currentImageNumber()}.jpg`);
+                        `https://raw.githubusercontent.com/rolling-scopes-school/stage1-tasks/assets/images/${PhotoFilter.#getTimeOfDay()}/${this.#currentImageNumber()}.jpg`);
 
                     if (this.currentImageSrc !== 'assets/img/img.jpg') {
                         PhotoFilter.#imageElement.setAttribute('crossorigin', 'anonymous');
