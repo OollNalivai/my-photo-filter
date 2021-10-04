@@ -1,3 +1,5 @@
+@import "~normalize.css";
+
 * {
     padding: 0;
     margin: 0;
@@ -295,6 +297,7 @@ img {
 }
 
 @media (max-width: 1024px) {
+
     .main {
         padding-top: 40px;
     }
@@ -341,6 +344,7 @@ img {
 }
 
 @media (max-width: 375px) {
+
     .btn {
         min-width: 145px;
     }
